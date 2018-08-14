@@ -7,6 +7,9 @@ use gtk::prelude::*;
 use gtk::{Application, ApplicationWindow, Builder, Image};
 
 use std::env::args;
+use std::collections::HashMap;
+use datapoint::Datapoint;
+use parser::parse_testbed;
 
 // make moving clones into closures more convenient
 macro_rules! clone {
@@ -46,23 +49,43 @@ fn build_ui(application: &gtk::Application) {
 }
 
 pub struct TestbedGui {
-    application: Application
+    application: Application,
+    datapoints: HashMap<String, Datapoint>
 }
 impl TestbedGui {
     pub fn new() -> TestbedGui {
         let application = gtk::Application::new("me.bcow.fmitestbed",
-                                                gio::ApplicationFlags::empty())
-                                            .expect("Initialization failed...");
+            gio::ApplicationFlags::empty())
+            .expect("Initialization failed...");
 
         application.connect_startup(move |app| {
             build_ui(app);
         });
         application.connect_activate(|_| {});
         
-        TestbedGui { application: application }
+        TestbedGui { application: application, datapoints: HashMap::new() }
     }
 
     pub fn run(&self) {
+        // we are using a closure to capture the data
+        //let mut datapoints: HashMap<String, Datapoint> = HashMap::new();
+        let tick = move || {
+            // download fmi data
+            self.datapoints = parse_testbed();
+            // test pixbuf conversion
+            //for key in self.datapoints.keys() {
+            //    println!("get pixbuf for {}", key);
+            //    let _pixbuf = self.datapoints.get(key).unwrap().image_as_pixbuf();
+            //}
+
+            // we could return gtk::Continue(false) to stop our refreshing data
+            gtk::Continue(true)
+        };
+
+        // executes the closure once every five minutes
+        gtk::timeout_add_seconds(5 * 60, tick);
+
+        // run Gtk main loop
         self.application.run(&args().collect::<Vec<_>>());
     }
 }
