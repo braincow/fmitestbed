@@ -68,15 +68,14 @@ impl TestbedGui {
 
     pub fn run(&self) {
         // we are using a closure to capture the data
-        //let mut datapoints: HashMap<String, Datapoint> = HashMap::new();
         let tick = move || {
             // download fmi data
             self.datapoints = parse_testbed();
             // test pixbuf conversion
-            //for key in self.datapoints.keys() {
-            //    println!("get pixbuf for {}", key);
-            //    let _pixbuf = self.datapoints.get(key).unwrap().image_as_pixbuf();
-            //}
+            for key in self.datapoints.keys() {
+                println!("get pixbuf for {}", key);
+                let _pixbuf = self.datapoints.get(key).unwrap().image_as_pixbuf();
+            }
 
             // we could return gtk::Continue(false) to stop our refreshing data
             gtk::Continue(true)
