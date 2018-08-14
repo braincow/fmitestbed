@@ -4,7 +4,6 @@ extern crate fmitestbed;
 
 use fmitestbed::parser::parse_testbed;
 
-#[cfg(feature = "gtk_3_10")]
 mod example {
     use gio;
     use gtk;
@@ -67,7 +66,6 @@ mod example {
     }
 }
 
-#[cfg(feature = "gtk_3_10")]
 fn main() {
     // download fmi data
     let datapoints = parse_testbed();
@@ -77,10 +75,4 @@ fn main() {
         let _pixbuf = datapoints.get(key).unwrap().image_as_pixbuf();
     }
     example::main();
-}
-
-#[cfg(not(feature = "gtk_3_10"))]
-fn main() {
-    eprintln!("This program requires GTK 3.10 or later");
-    eprintln!("Did you forget to build with `--features gtk_3_10`?");
 }
