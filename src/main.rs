@@ -1,20 +1,8 @@
-extern crate reqwest;
-extern crate regex;
-extern crate url;
-extern crate chrono;
-extern crate image;
 extern crate gio;
 extern crate gtk;
-extern crate gdk_pixbuf;
 extern crate fmitestbed;
 
-use gdk_pixbuf::{Pixbuf, Colorspace};
-use regex::Regex;
-use url::Url;
-use chrono::NaiveDateTime;
-use std::collections::HashMap;
-use image::{DynamicImage, GenericImage};
-use fmitestbed::datapoint::Datapoint;
+use fmitestbed::parser::parse_testbed;
 
 #[cfg(feature = "gtk_3_10")]
 mod example {
@@ -79,30 +67,6 @@ mod example {
     }
 }
 
-fn parse_testbed() -> HashMap<String, Datapoint> {
-    // fetch HTML source for later parsing
-    let mut res = match reqwest::get("http://testbed.fmi.fi/") {
-        Ok(res) => res,
-        Err(err) => {
-            panic!("{}", err);
-        }
-    };
-    //eprintln!("Status: {}", res.status());
-    //eprintln!("Headers:\n{:?}", res.headers());
-    let body: String = res.text().unwrap();
-    let url_re = Regex::new(r"(https://.?.img.fmi.fi/php/img.php[\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])").unwrap();
-    let timestamp_re = Regex::new(r"(\d{12})").unwrap();
-    // zip iterators from both regexp searches into one and loop through them simultaneously
-    let mut datapoints = HashMap::new();
-    let matrix = url_re.captures_iter(&body).zip(timestamp_re.captures_iter(&body));
-    for (url, timestamp) in matrix {
-        println!("{} {}", &timestamp[1], &url[1]);
-        let datapoint = Datapoint::new(url[1].to_string(), timestamp[1].to_string()).unwrap();
-        datapoints.insert(String::from(&timestamp[1]), datapoint);
-    }
-    datapoints
-}
-
 #[cfg(feature = "gtk_3_10")]
 fn main() {
     // download fmi data
@@ -110,7 +74,7 @@ fn main() {
     // test pixbuf conversion
     for key in datapoints.keys() {
         println!("get pixbuf for {}", key);
-        let pixbuf = datapoints.get(key).unwrap().image_as_pixbuf();
+        let _pixbuf = datapoints.get(key).unwrap().image_as_pixbuf();
     }
     example::main();
 }

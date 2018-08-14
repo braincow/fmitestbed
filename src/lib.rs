@@ -6,3 +6,4 @@ extern crate image;
 extern crate gdk_pixbuf;
 
 pub mod datapoint;
+pub mod parser;
