@@ -6,6 +6,7 @@ extern crate image;
 extern crate gio;
 extern crate gtk;
 extern crate gdk_pixbuf;
+extern crate fmitestbed;
 
 use gdk_pixbuf::{Pixbuf, Colorspace};
 use regex::Regex;
@@ -13,6 +14,7 @@ use url::Url;
 use chrono::NaiveDateTime;
 use std::collections::HashMap;
 use image::{DynamicImage, GenericImage};
+use fmitestbed::datapoint::Datapoint;
 
 #[cfg(feature = "gtk_3_10")]
 mod example {
@@ -77,77 +79,6 @@ mod example {
     }
 }
 
-struct Datapoint {
-    _url: Url,
-    timestamp: NaiveDateTime,
-    image: DynamicImage
-}
-impl Datapoint {
-    fn new(url: String, timestamp: String) -> Result<Datapoint, Box<::std::error::Error>> {
-        // parse url string into object representation
-        let url: Url = match Url::parse(&url) {
-            Ok(url) => url,
-            Err(err) => {
-                eprintln!("url parse error: {} {}", err, url);
-                return Err(Box::new(err))
-            }
-        };
-        // parse timestamp into object representation
-        let timestamp = match NaiveDateTime::parse_from_str(&timestamp, "%Y%m%d%H%M") {
-            Ok(timestamp) => timestamp,
-            Err(err) => {
-                eprintln!("timestamp parse error: {} {}", err, timestamp);
-                return Err(Box::new(err))
-            }
-        };
-        // download the actual image data ...
-        let mut res = match reqwest::get(&url.to_string()) {
-            Ok(mut res) => res,
-            Err(err) => {
-                eprintln!("image download error: {} {}", err, url.to_string());
-                panic!("{}", err);
-            }
-        };
-        // ... and parse it from memory
-        let mut image_buf: Vec<u8> = Vec::new();
-        res.copy_to(&mut image_buf)?;
-        let image = match image::load_from_memory_with_format(
-                image_buf.as_slice(), image::ImageFormat::PNG) {
-            Ok(image) => image,
-            Err(err) => {
-                eprintln!("Error on parsing image date {} {}", err, url);
-                return Err(Box::new(err))
-            }
-        };
-        // return Datapoint
-        Ok(Datapoint { _url: url, timestamp: timestamp, image: image })
-    }
-
-    fn image(&self) -> &DynamicImage {
-        &self.image
-    }
-
-    fn image_as_pixbuf(&self, alpha: bool) -> Pixbuf {
-        let mut channels: i32 = 3;
-        if alpha {
-            channels += 1;
-        }
-        let pixbuf = Pixbuf::new_from_vec(
-            self.image.raw_pixels(),
-            Colorspace::Rgb,
-            false,
-            8,
-            self.image.width() as i32,
-            self.image.height() as i32,
-            channels * self.image.width() as i32);
-        pixbuf
-    }
-
-    fn timestamp(&self) -> &chrono::NaiveDateTime {
-        &self.timestamp
-    }
-}
-
 fn parse_testbed() -> HashMap<String, Datapoint> {
     // fetch HTML source for later parsing
     let mut res = match reqwest::get("http://testbed.fmi.fi/") {
@@ -179,7 +110,7 @@ fn main() {
     // test pixbuf conversion
     for key in datapoints.keys() {
         println!("get pixbuf for {}", key);
-        let pixbuf = datapoints.get(key).unwrap().image_as_pixbuf(false);
+        let pixbuf = datapoints.get(key).unwrap().image_as_pixbuf();
     }
     example::main();
 }
