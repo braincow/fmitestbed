@@ -8,6 +8,9 @@ use gtk::{Application, ApplicationWindow, Builder, Image};
 
 use std::env::args;
 use std::collections::HashMap;
+use std::rc::Rc;
+use std::cell::RefCell;
+
 use datapoint::Datapoint;
 use parser::parse_testbed;
 
@@ -50,7 +53,7 @@ fn build_ui(application: &gtk::Application) {
 
 pub struct TestbedGui {
     application: Application,
-    datapoints: HashMap<String, Datapoint>
+    datapoints: RefCell<Rc<HashMap<String, Datapoint>>>
 }
 impl TestbedGui {
     pub fn new() -> TestbedGui {
@@ -63,19 +66,19 @@ impl TestbedGui {
         });
         application.connect_activate(|_| {});
         
-        TestbedGui { application: application, datapoints: HashMap::new() }
+        TestbedGui { application: application, datapoints: RefCell::new(Rc::new(HashMap::new())) }
     }
 
     pub fn run(&self) {
         // we are using a closure to capture the data
         let tick = move || {
             // download fmi data
-            self.datapoints = parse_testbed();
+            self.datapoints = RefCell::new(Rc::new(parse_testbed()));
             // test pixbuf conversion
-            for key in self.datapoints.keys() {
-                println!("get pixbuf for {}", key);
-                let _pixbuf = self.datapoints.get(key).unwrap().image_as_pixbuf();
-            }
+            //for key in self.datapoints.clone() {
+            //    println!("get pixbuf for {}", key);
+            //    let _pixbuf = self.datapoints.get(key).unwrap().image_as_pixbuf();
+            //}
 
             // we could return gtk::Continue(false) to stop our refreshing data
             gtk::Continue(true)
