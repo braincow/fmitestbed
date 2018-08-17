@@ -71,9 +71,10 @@ impl TestbedGui {
 
     pub fn run(&self) {
         // we are using a closure to capture the data
+        let mut datapoints = RefCell::new(Rc::new(HashMap::new()));
         let tick = move || {
             // download fmi data
-            self.datapoints = RefCell::new(Rc::new(parse_testbed()));
+            datapoints = RefCell::new(Rc::new(parse_testbed()));
             // test pixbuf conversion
             //for key in self.datapoints.clone() {
             //    println!("get pixbuf for {}", key);
@@ -83,6 +84,7 @@ impl TestbedGui {
             // we could return gtk::Continue(false) to stop our refreshing data
             gtk::Continue(true)
         };
+        self.datapoints = RefCell::clone(&datapoints);
 
         // executes the closure once every five minutes
         gtk::timeout_add_seconds(5 * 60, tick);
