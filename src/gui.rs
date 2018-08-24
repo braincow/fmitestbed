@@ -51,12 +51,30 @@ fn build_ui(application: &gtk::Application) {
     main_window.show_all();
 }
 
+struct Datapoints {
+    datapoints: HashMap<String, Datapoint>
+}
+impl Datapoints {
+    fn new() -> Datapoints {
+        // return empty hashmap
+        Datapoints { datapoints: HashMap::new() }
+    }
+
+    fn tick(&mut self) -> Continue {
+        // download fmi data
+        self.datapoints = parse_testbed();
+
+        // we could return gtk::Continue(false) to stop our refreshing data
+        gtk::Continue(true)
+    }
+}
+
 pub struct TestbedGui {
     application: Application,
-    datapoints: RefCell<Rc<HashMap<String, Datapoint>>>
+    datapoints: RefCell<Datapoints>
 }
 impl TestbedGui {
-    pub fn new() -> TestbedGui {
+    pub fn new() -> Rc<TestbedGui> {
         let application = gtk::Application::new("me.bcow.fmitestbed",
             gio::ApplicationFlags::empty())
             .expect("Initialization failed...");
@@ -65,30 +83,16 @@ impl TestbedGui {
             build_ui(app);
         });
         application.connect_activate(|_| {});
-        
-        TestbedGui { application: application, datapoints: RefCell::new(Rc::new(HashMap::new())) }
+
+        let instance = Rc::new(TestbedGui { application: application, datapoints: RefCell::new(Datapoints::new()) });
+        // executes the update every five minutes
+        instance.datapoints.borrow().tick();
+        //gtk::timeout_add_seconds(5 * 60, instance.datapoints.borrow().tick);
+
+        instance
     }
 
     pub fn run(&self) {
-        // we are using a closure to capture the data
-        let mut datapoints = RefCell::new(Rc::new(HashMap::new()));
-        let tick = move || {
-            // download fmi data
-            datapoints = RefCell::new(Rc::new(parse_testbed()));
-            // test pixbuf conversion
-            //for key in self.datapoints.clone() {
-            //    println!("get pixbuf for {}", key);
-            //    let _pixbuf = self.datapoints.get(key).unwrap().image_as_pixbuf();
-            //}
-
-            // we could return gtk::Continue(false) to stop our refreshing data
-            gtk::Continue(true)
-        };
-        self.datapoints = RefCell::clone(&datapoints);
-
-        // executes the closure once every five minutes
-        gtk::timeout_add_seconds(5 * 60, tick);
-
         // run Gtk main loop
         self.application.run(&args().collect::<Vec<_>>());
     }
