@@ -75,7 +75,7 @@ impl TestbedGui {
         application.connect_activate(|_| {});
 
         TestbedGui { application: application,
-            datapoints: Rc::new(RefCell::new(parse_testbed())),
+            datapoints: Rc::new(RefCell::new(BTreeMap::new())),
             datapoint_image: img_datapoint,
             datapoint_position: Rc::new(RefCell::new(0)),
             progress_bar: pbar_position }
@@ -85,7 +85,12 @@ impl TestbedGui {
         // create a reference cycle clone of the datapoints in our struct and refresh data
         let datapoints_clone = self.datapoints.clone();
         let datapoints_position_clone = self.datapoint_position.clone();
+        let pbar_position_clone = self.progress_bar.clone();
         let tick = move || {
+            // put progress bar in pulse mode to show activity in the background is in progres
+            *&pbar_position_clone.borrow_mut()
+                .set_text("Updating FMI data");
+            *&pbar_position_clone.borrow_mut().pulse();
             //println!("tick");
             // refresh the FMI testbed data
             *datapoints_clone.borrow_mut() = parse_testbed();
