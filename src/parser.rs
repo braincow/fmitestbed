@@ -20,7 +20,7 @@ pub fn parse_testbed() -> BTreeMap<String, Datapoint> {
     let mut datapoints = BTreeMap::new();
     let matrix = url_re.captures_iter(&body).zip(timestamp_re.captures_iter(&body));
     for (url, timestamp) in matrix {
-        //println!("{} {}", &timestamp[1], &url[1]);
+        println!("{} {}", &timestamp[1], &url[1]);
         let datapoint = Datapoint::new(url[1].to_string(), timestamp[1].to_string()).unwrap();
         datapoints.insert(String::from(&timestamp[1]), datapoint);
     }
