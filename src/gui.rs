@@ -75,7 +75,7 @@ impl TestbedGui {
         application.connect_activate(|_| {});
 
         TestbedGui { application: application,
-            datapoints: Rc::new(RefCell::new(BTreeMap::new())),
+            datapoints: Rc::new(RefCell::new(parse_testbed())),
             datapoint_image: img_datapoint,
             datapoint_position: Rc::new(RefCell::new(0)),
             progress_bar: pbar_position }
