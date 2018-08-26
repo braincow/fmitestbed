@@ -1,17 +1,18 @@
 use gdk_pixbuf::{Pixbuf, Colorspace};
 use url::Url;
-use chrono::NaiveDateTime;
+use chrono::prelude::*;
+use chrono::DateTime;
 use image::{DynamicImage, GenericImage};
 use reqwest::get;
 use image::load_from_memory;
 
 pub struct Datapoint {
     _url: Url,
-    timestamp: NaiveDateTime,
+    timestamp: DateTime<Utc>,
     image: DynamicImage
 }
 impl Datapoint {
-    pub fn new(url: String, timestamp: String) -> Result<Datapoint, Box<::std::error::Error>> {
+    pub fn new(url: String, mut timestamp: String) -> Result<Datapoint, Box<::std::error::Error>> {
         // parse url string into object representation
         let url: Url = match Url::parse(&url) {
             Ok(url) => url,
@@ -21,8 +22,9 @@ impl Datapoint {
             }
         };
         // parse timestamp into object representation
-        let timestamp = match NaiveDateTime::parse_from_str(&timestamp, "%Y%m%d%H%M") {
-            Ok(timestamp) => timestamp,
+        timestamp = format!("{}+0000", timestamp);
+        let timestamp = match DateTime::parse_from_str(&timestamp, "%Y%m%d%H%M%z") {
+            Ok(timestamp) => timestamp.with_timezone(&Utc),
             Err(err) => {
                 eprintln!("timestamp parse error: {} {}", err, timestamp);
                 return Err(Box::new(err))
@@ -66,7 +68,7 @@ impl Datapoint {
         pixbuf
     }
 
-    pub fn timestamp(&self) -> &NaiveDateTime {
+    pub fn timestamp_utc(&self) -> &DateTime<Utc> {
         &self.timestamp
     }
 }

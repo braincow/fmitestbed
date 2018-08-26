@@ -10,6 +10,7 @@ use std::env::args;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 use std::cell::RefCell;
+use chrono::prelude::Local;
 
 use datapoint::Datapoint;
 use parser::parse_testbed;
@@ -115,7 +116,10 @@ impl TestbedGui {
                     *&img_datapoint_clone.borrow_mut()
                         .set_from_pixbuf(&val.image_as_pixbuf());
                     *&pbar_position_clone.borrow_mut()
-                        .set_text(val.timestamp().format("%Y-%m-%d %H:%M:%S").to_string().as_ref());
+                        .set_text(val.timestamp_utc()
+                        .with_timezone(&Local)
+                        .format("%d.%m.%Y %H:%M")
+                        .to_string().as_ref());
                     break;
                 }
                 position = position + 1;
