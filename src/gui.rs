@@ -137,7 +137,7 @@ impl TestbedGui {
             *datapoints_position_clone.borrow_mut() = position;
             gtk::Continue(true)
         };
-        gtk::timeout_add_seconds(1, tock);
+        gtk::timeout_add(250, tock);
 
         // run Gtk main loop
         self.application.run(&args().collect::<Vec<_>>());
