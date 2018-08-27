@@ -9,7 +9,8 @@ use image::load_from_memory;
 pub struct Datapoint {
     _url: Url,
     timestamp: DateTime<Utc>,
-    image: DynamicImage
+    image: DynamicImage,
+    pixbuf: Pixbuf
 }
 impl Datapoint {
     pub fn new(url: String, mut timestamp: String) -> Result<Datapoint, Box<::std::error::Error>> {
@@ -48,24 +49,25 @@ impl Datapoint {
                 return Err(Box::new(err))
             }
         };
+        // .. also convert it into pixbuf
+        let pixbuf = Pixbuf::new_from_vec(
+            image.raw_pixels(),
+            Colorspace::Rgb,
+            false,
+            8,
+            image.width() as i32,
+            image.height() as i32,
+            3 * image.width() as i32);
         // return Datapoint
-        Ok(Datapoint { _url: url, timestamp: timestamp, image: image })
+        Ok(Datapoint { _url: url, timestamp: timestamp, image: image, pixbuf: pixbuf })
     }
 
     pub fn image(&self) -> &DynamicImage {
         &self.image
     }
 
-    pub fn image_as_pixbuf(&self) -> Pixbuf {
-        let pixbuf = Pixbuf::new_from_vec(
-            self.image.raw_pixels(),
-            Colorspace::Rgb,
-            false,
-            8,
-            self.image.width() as i32,
-            self.image.height() as i32,
-            3 * self.image.width() as i32);
-        pixbuf
+    pub fn image_as_pixbuf(&self) -> &Pixbuf {
+        &self.pixbuf
     }
 
     pub fn timestamp_utc(&self) -> &DateTime<Utc> {

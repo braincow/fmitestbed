@@ -114,7 +114,7 @@ impl TestbedGui {
                 if position > old_position {
                     //println!("get pixbuf for {}", _key);
                     *&img_datapoint_clone.borrow_mut()
-                        .set_from_pixbuf(&val.image_as_pixbuf());
+                        .set_from_pixbuf(val.image_as_pixbuf());
                     *&pbar_position_clone.borrow_mut()
                         .set_text(val.timestamp_utc()
                         .with_timezone(&Local)
